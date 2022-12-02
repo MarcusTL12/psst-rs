@@ -44,7 +44,7 @@ impl<K: Ord, V> Psst<K, V> {
 
         if self.data[lo].0.eq(k) {
             Some(lo)
-        } else if self.data[hi].0.eq(k) {
+        } else if hi != lo && self.data[hi].0.eq(k) {
             Some(hi)
         } else {
             None
