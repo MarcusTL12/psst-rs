@@ -136,7 +136,7 @@ mod tests {
         s.insert("68".to_owned(), 25);
         s.insert("5".to_owned(), 655458);
         s.insert("6".to_owned(), 666);
-        s.insert("Marcus".to_owned(), 7);
+        assert_eq!(s.insert("Marcus".to_owned(), 7), Some(1));
         s.insert("7".to_owned(), 1215);
         s.insert("8".to_owned(), 6654842);
         s.insert("9".to_owned(), 655458);
@@ -145,6 +145,6 @@ mod tests {
 
         println!("{:?}", s);
 
-        assert_eq!(s.get(&"Marcus".to_owned()).unwrap(), &7);
+        assert_eq!(s.get(&"Marcus".to_owned()), Some(&7));
     }
 }
