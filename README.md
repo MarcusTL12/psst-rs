@@ -65,14 +65,6 @@ algorithm with O(1) additional space complexity. The simplest is running a
 in-place quicksort (or similar) with complexity O(n log(n)) for the entire
 array.
 
-#### Notes on more optimal sorting complexity
-
-Since most of the array is already sorted, a more efficient algorithm could be
-to sort the unsorted block in O(k log(k)) time, then merge the two sorted blocks
-in O(n) time, however this would require additional memory. One could probably
-be smart in using the additional capacity of the buffer, but for the current
-analysis will assume O(n log(n)) sorting complexity
-
 #### Optimizing sorting threshold
 
 The total (amortized) runtime of insertion is then
@@ -86,3 +78,20 @@ The insertion complexity is then
 O(log(n) + \sqrt{2 n log(n)} / 2 + n log(n) / \sqrt{2 n log(n)})
 =
 O(log(n) + \sqrt{2 n log(n)})
+=
+O(\sqrt{n log(n)})
+
+#### Notes on more optimal sorting complexity
+
+Since most of the array is already sorted, a more efficient algorithm could be
+to sort the unsorted block in O(k log(k)) time, then merge the two sorted blocks
+in O(n) time, however this would require additional memory. One could probably
+be smart in using the additional capacity of the buffer. For comparison, here
+is the analysis of the optimal sorting threshold if the optimal time sorting
+algorithm is used.
+
+The total (amortized) runtime of insertion is then
+O(log(n) + k / 2 + n / k)
+which the same analysis as above can be used to find the optimal k as
+k = \sqrt{2 n}
+giving an insertion complexity of O(\sqrt{n})
