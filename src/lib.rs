@@ -91,6 +91,18 @@ impl<K: Ord, V> PsstMap<K, V> {
             None => Vacant(self, k),
         }
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = &(K, V)> {
+        self.data.iter()
+    }
+
+    pub fn keys(&self) -> impl Iterator<Item = &K> {
+        self.data.iter().map(|(k, _)| k)
+    }
+
+    pub fn values(&self) -> impl Iterator<Item = &V> {
+        self.data.iter().map(|(_, v)| v)
+    }
 }
 
 impl<'a, K: Ord, V> Entry<'a, K, V> {
@@ -108,6 +120,17 @@ impl<'a, K: Ord, V> Entry<'a, K, V> {
 impl<K: Ord, V> Default for PsstMap<K, V> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl<K: Ord, V> IntoIterator for PsstMap<K, V> {
+    type Item = (K, V);
+
+    type IntoIter =
+        <std::vec::Vec<(K, V)> as std::iter::IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.data.into_iter()
     }
 }
 
