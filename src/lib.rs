@@ -1,3 +1,5 @@
+pub mod set;
+
 #[derive(Debug, Clone)]
 pub struct PsstMap<K: Ord, V> {
     n_s: usize, // Current size of sorted block
