@@ -1,3 +1,5 @@
+use crate::Entry::{Occupied, Vacant};
+
 pub mod set;
 
 #[derive(Debug, Clone)]
@@ -5,6 +7,11 @@ pub struct PsstMap<K: Ord, V> {
     n_s: usize, // Current size of sorted block
     k: usize,   // Max size of unsorted block
     data: Vec<(K, V)>,
+}
+
+pub enum Entry<'a, K: Ord, V> {
+    Vacant(&'a mut PsstMap<K, V>, K),
+    Occupied(&'a mut V),
 }
 
 impl<K: Ord, V> PsstMap<K, V> {
@@ -66,15 +73,34 @@ impl<K: Ord, V> PsstMap<K, V> {
 
             Some(std::mem::replace(other_v, v))
         } else {
-            self.data.push((k, v));
-
             if self.n_u() > self.k {
                 self.data.sort_by(|(a, _), (b, _)| a.cmp(b));
                 self.n_s = self.len();
                 self.k = self.get_opt_num_unsorted();
             }
 
+            self.data.push((k, v));
+
             None
+        }
+    }
+
+    pub fn entry<'a>(&'a mut self, k: K) -> Entry<'a, K, V> {
+        match self.get_mut(&k) {
+            Some(v) => Occupied(v),
+            None => Vacant(self, k),
+        }
+    }
+}
+
+impl<'a, K: Ord, V> Entry<'a, K, V> {
+    pub fn or_insert(self, v: V) -> &'a mut V {
+        match self {
+            Occupied(v) => v,
+            Vacant(s, k) => {
+                s.insert(k, v);
+                &mut s.data.last_mut().unwrap().1
+            }
         }
     }
 }
