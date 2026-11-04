@@ -1,15 +1,15 @@
 #[derive(Debug, Clone)]
-pub struct Psst<K: Ord, V> {
+pub struct PsstMap<K: Ord, V> {
     n_s: usize, // Current size of sorted block
     k: usize,   // Max size of unsorted block
     data: Vec<(K, V)>,
 }
 
-impl<K: Ord, V> Psst<K, V> {
+impl<K: Ord, V> PsstMap<K, V> {
     pub fn new() -> Self {
         Self {
             n_s: 0,
-            k: 10,
+            k: 16,
             data: Vec::new(),
         }
     }
@@ -18,37 +18,12 @@ impl<K: Ord, V> Psst<K, V> {
         self.data.len()
     }
 
-    fn n_u(&self) -> usize {
-        self.len() - self.n_s
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
-    fn binary_search(&self, k: &K) -> Option<usize> {
-        use std::cmp::Ordering::*;
-
-        if self.n_s == 0 {
-            return None;
-        }
-
-        let mut lo = 0;
-        let mut hi = self.n_s - 1;
-
-        while hi - lo > 1 {
-            let mid = (hi + lo) / 2;
-
-            match self.data[mid].0.cmp(k) {
-                Greater => hi = mid - 1,
-                Equal => return Some(mid),
-                Less => lo = mid + 1,
-            }
-        }
-
-        if self.data[lo].0.eq(k) {
-            Some(lo)
-        } else if hi != lo && self.data[hi].0.eq(k) {
-            Some(hi)
-        } else {
-            None
-        }
+    fn n_u(&self) -> usize {
+        self.len() - self.n_s
     }
 
     fn linear_search(&self, k: &K) -> Option<usize> {
@@ -61,29 +36,26 @@ impl<K: Ord, V> Psst<K, V> {
     }
 
     fn search(&self, k: &K) -> Option<usize> {
-        self.binary_search(k).or_else(|| self.linear_search(k))
+        self.data[0..self.n_s]
+            .binary_search_by_key(&k, |(k2, _)| k2)
+            .ok()
+            .or_else(|| self.linear_search(k))
     }
 
     pub fn get(&self, k: &K) -> Option<&V> {
-        if let Some(i) = self.search(k) {
-            self.data.get(i).map(|(_, x)| x)
-        } else {
-            None
-        }
+        self.search(k)
+            .and_then(|i| self.data.get(i).map(|(_, x)| x))
     }
 
     pub fn get_mut(&mut self, k: &K) -> Option<&mut V> {
-        if let Some(i) = self.search(k) {
-            self.data.get_mut(i).map(|(_, x)| x)
-        } else {
-            None
-        }
+        self.search(k)
+            .and_then(|i| self.data.get_mut(i).map(|(_, x)| x))
     }
 
     fn get_opt_num_unsorted(&self) -> usize {
         let n = self.data.len() as f64;
 
-        (n * n * n.log2()).powf(1.0 / 3.0) as usize
+        (2.0 * n * n.log2()).sqrt().ceil() as usize
     }
 
     pub fn insert(&mut self, k: K, v: V) -> Option<V> {
@@ -95,11 +67,9 @@ impl<K: Ord, V> Psst<K, V> {
             self.data.push((k, v));
 
             if self.n_u() > self.k {
-                println!("sorted at n = {}", self.len());
                 self.data.sort_by(|(a, _), (b, _)| a.cmp(b));
                 self.n_s = self.len();
                 self.k = self.get_opt_num_unsorted();
-                println!("set k to {}", self.k);
             }
 
             None
@@ -107,13 +77,19 @@ impl<K: Ord, V> Psst<K, V> {
     }
 }
 
+impl<K: Ord, V> Default for PsstMap<K, V> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::Psst;
+    use super::PsstMap;
 
     #[test]
     fn it_works() {
-        let mut s = Psst::new();
+        let mut s = PsstMap::new();
 
         s.insert("Heisann!".to_owned(), 76);
         s.insert("Hadesann!".to_owned(), 69);
