@@ -67,6 +67,12 @@ impl<K: Ord, V> PsstMap<K, V> {
         (2.0 * n * n.log2()).sqrt().ceil() as usize
     }
 
+    pub fn sort(&mut self) {
+        self.data.sort_by(|(a, _), (b, _)| a.cmp(b));
+        self.n_s = self.len();
+        self.k = self.get_opt_num_unsorted();
+    }
+
     pub fn insert(&mut self, k: K, v: V) -> Option<V> {
         if let Some(i) = self.search(&k) {
             let (_, other_v) = self.data.get_mut(i).unwrap();
@@ -74,11 +80,11 @@ impl<K: Ord, V> PsstMap<K, V> {
             Some(std::mem::replace(other_v, v))
         } else {
             if self.n_u() > self.k {
-                self.data.sort_by(|(a, _), (b, _)| a.cmp(b));
-                self.n_s = self.len();
-                self.k = self.get_opt_num_unsorted();
+                self.sort();
             }
 
+            // Make sure last inserted element is at the end of the collection
+            // otherwise .entry() does not work
             self.data.push((k, v));
 
             None
