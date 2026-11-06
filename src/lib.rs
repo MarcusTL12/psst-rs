@@ -109,6 +109,14 @@ impl<K: Ord, V> PsstMap<K, V> {
     pub fn values(&self) -> impl Iterator<Item = &V> {
         self.data.iter().map(|(_, v)| v)
     }
+
+    pub fn pop(&mut self) -> Option<(K, V)> {
+        if self.n_u() == 0 {
+            self.n_s = self.n_s.saturating_sub(1);
+        }
+
+        self.data.pop()
+    }
 }
 
 impl<'a, K: Ord, V> Entry<'a, K, V> {
